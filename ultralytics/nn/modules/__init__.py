@@ -75,6 +75,8 @@ from .conv import (
     LightConv,
     RepConv,
     SpatialAttention,
+    ResBlock_CBAM,
+    ECAAttention,
 )
 from .head import (
     OBB,
@@ -179,4 +181,5 @@ __all__ = (
     "TorchVision",
     "Index",
     "A2C2f",
+    'ResBlock_CBAM','ECAAttention', # added
 )

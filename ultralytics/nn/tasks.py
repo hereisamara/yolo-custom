@@ -43,6 +43,7 @@ from ultralytics.nn.modules import (
     Conv,
     Conv2,
     ConvTranspose,
+    ResBlock_CBAM,ECAAttention,  # added attention
     Detect,
     DWConv,
     DWConvTranspose2d,
@@ -1610,6 +1611,7 @@ def parse_model(d, ch, verbose=True):
     layers, save, c2 = [], [], ch[-1]  # layers, savelist, ch out
     base_modules = frozenset(
         {
+            ResBlock_CBAM,
             Classify,
             Conv,
             ConvTranspose,
@@ -1666,6 +1668,10 @@ def parse_model(d, ch, verbose=True):
         }
     )
     for i, (f, n, m, args) in enumerate(d["backbone"] + d["head"]):  # from, number, module, args
+
+        print(f"[Layer {i}] {m.__name__ if hasattr(m, '__name__') else m}:")
+        print(f"  from: {f} | repeats: {n} | args: {args}")
+        
         m = (
             getattr(torch.nn, m[3:])
             if "nn." in m
@@ -1734,6 +1740,12 @@ def parse_model(d, ch, verbose=True):
             c2 = args[0]
             c1 = ch[f]
             args = [*args[1:]]
+        elif m is ECAAttention:
+            c1, c2 = ch[f], args[0]
+            print(f"c1: {c1}, c2: {c2}, args: {args} at ECAAttention")
+            if c2 != nc:
+                c2 = make_divisible(min(c2, max_channels) * width, 8)
+            args = [c1, *args[1:]]
         else:
             c2 = ch[f]
 
