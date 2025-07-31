@@ -59,4 +59,4 @@ head:
   - [-1, 2, C3k2, [1024, True]] # 29 (P5/32-large)
   - [-1, 1, ECAAttention, [1024]]
 
-  - [[17, 25, 29], 1, Detect, [nc]] # Detect(P3, P4, P5)
+  - [[17, 21, 25, 29], 1, Detect, [nc]] # Detect(P3, P4, P5)
