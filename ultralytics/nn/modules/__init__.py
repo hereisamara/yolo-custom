@@ -59,6 +59,9 @@ from .block import (
     ResNetLayer,
     SCDown,
     TorchVision,
+    se_block, cbam_block, eca_block, CA_Block, CSPStage,
+    BiLevelRoutingAttention,
+    
 )
 from .conv import (
     CBAM,
@@ -75,6 +78,8 @@ from .conv import (
     LightConv,
     RepConv,
     SpatialAttention,
+    ResBlock_CBAM,
+    ECAAttention,
 )
 from .head import (
     OBB,
@@ -179,4 +184,6 @@ __all__ = (
     "TorchVision",
     "Index",
     "A2C2f",
+    "ResBlock_CBAM","ECAAttention", # added
+    "se_block","cbam_block","eca_block","BiLevelRoutingAttention","CA_Block","CSPStage",
 )
