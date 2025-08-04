@@ -44,6 +44,8 @@ from ultralytics.nn.modules import (
     Conv2,
     ConvTranspose,
     ResBlock_CBAM,ECAAttention,  # added attention
+    cbam_block, eca_block, CA_Block, se_block,CSPStage,
+    BiLevelRoutingAttention,
     Detect,
     DWConv,
     DWConvTranspose2d,
@@ -1646,6 +1648,7 @@ def parse_model(d, ch, verbose=True):
             SCDown,
             C2fCIB,
             A2C2f,
+            CSPStage
         }
     )
     repeat_modules = frozenset(  # modules with 'repeat' arguments
@@ -1665,6 +1668,7 @@ def parse_model(d, ch, verbose=True):
             C2fCIB,
             C2PSA,
             A2C2f,
+            CSPStage
         }
     )
     for i, (f, n, m, args) in enumerate(d["backbone"] + d["head"]):  # from, number, module, args
@@ -1746,6 +1750,11 @@ def parse_model(d, ch, verbose=True):
             if c2 != nc:
                 c2 = make_divisible(min(c2, max_channels) * width, 8)
             args = [c1, *args[1:]]
+        elif m in (se_block,cbam_block,eca_block,CA_Block):
+            args = [args[0]]
+        elif m is BiLevelRoutingAttention:
+            c2 = ch[f]
+            args = [c2, *args]
         else:
             c2 = ch[f]
 

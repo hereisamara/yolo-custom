@@ -753,7 +753,7 @@ class ResBlock_CBAM(nn.Module):
         out = self.relu(out)
         # print(f"[ResBlock_CBAM] Output shape: {out.shape}")
         return out
-    
+
 class ECAAttention(nn.Module):
     """Constructs a ECA module.
     Args:
@@ -777,3 +777,4 @@ class ECAAttention(nn.Module):
         # print(f"[ECAAttention] Output shape: {y.shape}")
 
         return x * y.expand_as(x)
+
