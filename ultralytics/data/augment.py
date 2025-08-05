@@ -1588,6 +1588,32 @@ class RandomFlip:
         return labels
 
 
+class RandomBlur:
+    """Apply random blur (Gaussian or median) to images with probability p."""
+
+    def __init__(self, p: float = 0.01, max_kernel_size: int = 5):
+        """
+        Args:
+            p (float): Probability of applying blur.
+            max_kernel_size (int): Maximum kernel size for blur (should be odd integer).
+        """
+        self.p = p
+        self.max_kernel_size = max_kernel_size if max_kernel_size % 2 == 1 else max_kernel_size + 1
+
+    def __call__(self, labels: dict) -> dict:
+        img = labels["img"]
+        if random.random() < self.p:
+            # Random kernel size among odd numbers up to max_kernel_size
+            k = random.choice(range(3, self.max_kernel_size + 1, 2))
+            # Randomly choose between Gaussian or median blur
+            if random.random() < 0.5:
+                img = cv2.GaussianBlur(img, (k, k), 0)
+            else:
+                img = cv2.medianBlur(img, k)
+            labels["img"] = img
+        return labels
+
+
 class LetterBox:
     """
     Resize image and padding for detection, instance segmentation, pose.
@@ -2579,6 +2605,7 @@ def v8_transforms(dataset, imgsz: int, hyp: IterableSimpleNamespace, stretch: bo
             RandomHSV(hgain=hyp.hsv_h, sgain=hyp.hsv_s, vgain=hyp.hsv_v),
             RandomFlip(direction="vertical", p=hyp.flipud, flip_idx=flip_idx),
             RandomFlip(direction="horizontal", p=hyp.fliplr, flip_idx=flip_idx),
+            RandomBlur(p=0.05, max_kernel_size=51)
         ]
     )  # transforms
 

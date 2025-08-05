@@ -148,6 +148,48 @@ class BasePredictor:
         callbacks.add_integration_callbacks(self)
 
     def preprocess(self, im: Union[torch.Tensor, List[np.ndarray]]) -> torch.Tensor:
+
+        def sharpen_image(img: np.ndarray) -> np.ndarray:
+            """
+            Apply a sharpening filter on the image using Unsharp Masking.
+
+            Args:
+                img (np.ndarray): Input image in HWC format (BGR or RGB).
+
+            Returns:
+                np.ndarray: Sharpened image.
+            """
+            # Gaussian blur the image
+            blurred = cv2.GaussianBlur(img, (0, 0), sigmaX=3)
+            # Weighted combination to enhance edges
+            sharpened = cv2.addWeighted(img, 1.5, blurred, -0.5, 0)
+            return sharpened
+
+        def is_blurry(img: np.ndarray, threshold: float = 100.0) -> bool:
+            """
+            Determine if an image is blurry using the variance of Laplacian method.
+
+            Args:
+                img (np.ndarray): Grayscale image.
+                threshold (float): Threshold below which image is considered blurry.
+
+            Returns:
+                bool: True if blurry, False otherwise.
+            """
+            if img.ndim == 3 and img.shape[2] == 3:  # Color image
+                gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            elif img.ndim == 2:
+                gray = img
+            else:
+                # If image has unexpected channels dimension, squeeze or select first channel
+                gray = np.squeeze(img)
+                if gray.ndim != 2:
+                    raise ValueError(f"Input image has unsupported shape {img.shape} for blur detection.")
+
+            gray = gray.astype(np.uint8)  # Ensure correct dtype for Laplacian
+            lap = cv2.Laplacian(gray, cv2.CV_64F)
+            fm = lap.var()
+            return fm < threshold
         """
         Prepare input image before inference.
 
@@ -159,9 +201,16 @@ class BasePredictor:
         """
         not_tensor = not isinstance(im, torch.Tensor)
         if not_tensor:
+
+            # Sharpen if blurry
+            if is_blurry(im):
+                im = sharpen_image(im)
+
             im = np.stack(self.pre_transform(im))
             if im.shape[-1] == 3:
                 im = im[..., ::-1]  # BGR to RGB
+            
+
             im = im.transpose((0, 3, 1, 2))  # BHWC to BCHW, (n, 3, h, w)
             im = np.ascontiguousarray(im)  # contiguous
             im = torch.from_numpy(im)
